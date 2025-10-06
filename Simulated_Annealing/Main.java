@@ -19,7 +19,7 @@ public class Main {
         ArrayList<String> E3 = new ArrayList<>(Arrays.asList("Belmar", "Cerdeira", "Douro", "Encosta", "Freita", "Gonta", "Horta", "Infantado", "Lourel", "Monte", "Nelas", "Oura", "Pinhal", "Quebrada", "Roseiral", "Serra", "Teixoso", "Ulgueira"));
         DistanceMatrix mE3 = new DistanceMatrix(m, E3);
 
-        SimulatedAnnealing sa = new SimulatedAnnealing(mE2);
+        SimulatedAnnealing sa = new SimulatedAnnealing(m);
 
         // Executar, medir tempo total e mostrar resultados
         long start = System.currentTimeMillis();
