@@ -27,18 +27,35 @@ public class Main {
         System.out.println("3 - Gradual");
         System.out.println("4 - Logarithmic");
         System.out.print("Opção: ");
-        int opt = in.nextInt();
+        int optDecay = in.nextInt();
 
-        String method = switch (opt) {
+        String methodDecay = switch (optDecay) {
             case 1 -> "geometric";
             case 2 -> "linear";
             case 3 -> "gradual";
             case 4 -> "logarithmic";
-            default -> "geometric";
+            default -> "";
         };
 
-        SimulatedAnnealing sa = new SimulatedAnnealing(m);
-        sa.setDecayMethod(method);
+        System.out.println("Escolha o método para variar o número de iterações por temperatura:");
+        System.out.println("1 - linear");
+        System.out.println("2 - exponential");
+        System.out.println("3 - random");
+        System.out.println("4 - constant");
+        System.out.print("Opção: ");
+        int optIter = in.nextInt();
+
+        String methodIter = switch (optIter) {
+            case 1 -> "linear";
+            case 2 -> "exponential";
+            case 3 -> "random";
+            case 4 -> "constant";
+            default -> "";
+        };
+
+        SimulatedAnnealing sa = new SimulatedAnnealing(mE1);
+        sa.setDecayMethod(methodDecay);
+        sa.setIterMethod(methodIter);
 
         // Executar, medir tempo total e mostrar resultados
         long start = System.currentTimeMillis();

@@ -31,10 +31,6 @@ public class Solution {
         return path;
     }
 
-    public Solution cloneSolution() {
-        return new Solution(path);
-    }
-
     @Override
     public String toString() {
         return path.toString();
