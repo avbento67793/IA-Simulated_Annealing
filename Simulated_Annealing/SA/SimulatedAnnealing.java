@@ -6,15 +6,21 @@ import java.util.*;
 
 public class SimulatedAnnealing {
 
-    private DistanceMatrix matrix;
-    private List<String> cities;
+    private final DistanceMatrix matrix;
+    private final List<String> cities;
 
-    // parâmetros a usar
+    // Parâmetros a usar
     private double T0;
     private double alpha;
     private double minTemp;
     private int iterPerTemp;
     private int maxIter;
+    private String decayMethod;
+
+
+    // Parâmetros a usar para o stop criterion
+    private final static int NO_IMPROVEMENT_LIMIT = 5000;
+    private final static double MIN_ACCEPTANCE_RATE = 0.01;
 
     // Random partilhado
     private final Random rng = new Random();
@@ -22,6 +28,12 @@ public class SimulatedAnnealing {
     public SimulatedAnnealing(DistanceMatrix matrix) {
         this.matrix = matrix;
         this.cities = matrix.getCities();
+        this.decayMethod = null;
+        this.T0 = 0.0;
+        this.alpha = 0.0;
+        this.minTemp = 0.0;
+        this.iterPerTemp = 0;
+        this.maxIter = 0;
     }
 
     // Gera solução inicial (permutação aleatória)
@@ -92,13 +104,53 @@ public class SimulatedAnnealing {
 
         // Movimento 2-opt:
         // Inverte o subcaminho entre as posições i e j (inclusive)
-        // Exemplo: [A, B, C, D, E, F]  → se i = 1, j = 4 → [A, E, D, C, B, F]
+        // Exemplo: [A, B, C, D, E, F] → se i = 1, j = 4 → [A, E, D, C, B, F]
         Collections.reverse(path.subList(i, j + 1));
 
 
         Solution newSol = new Solution(path); // Cria uma nova solução com este novo caminho (vizinho)
         newSol.evaluate(matrix);              // Calcula o custo total (distância percorrida na nova rota)
         return newSol;
+    }
+
+    public void setDecayMethod(String method) {
+        this.decayMethod = method.toLowerCase();
+    }
+
+    // Calcula uma nova temperatura segundo o tipo de decaimento escolhido
+    private double decayTemperature(double T, int iteration, String method) {
+        switch (method.toLowerCase()) {
+            case "geometric":
+                return T * alpha;
+
+            case "linear":
+                double beta = (T0 - minTemp) / maxIter;
+                return Math.max(minTemp, T - beta);
+
+            case "logarithmic":
+                return T0 / Math.log(2 + iteration);
+
+            case "gradual":
+                double fraction = (double) iteration / maxIter;
+                double adaptiveAlpha = 1.0 - 0.5 * fraction;
+                return Math.max(minTemp, T * adaptiveAlpha);
+
+            default:
+                return T * alpha; // Decaimento geométrico por ser o mais comum
+        }
+    }
+
+    // Verifica se algum critério de paragem foi ativado
+    private boolean stopCriterionMethod(double T, int iteration, int acceptedMoves, int totalMoves, int noImprovementCount) {
+        if (T <= minTemp) {
+            return true;
+        } else if (iteration == maxIter) {
+            return true;
+        }  else if ((double) acceptedMoves / totalMoves < MIN_ACCEPTANCE_RATE) {
+            return true;
+        } else {
+            return noImprovementCount > maxIter;
+        }
     }
 
     public void run() {
@@ -124,18 +176,26 @@ public class SimulatedAnnealing {
         double T = T0;
         int iteration = 0;
 
+        int acceptedMoves = 0;
+        int totalMoves = 0;
+        int noImprovementCount = 0;
+
         long start = System.currentTimeMillis();
 
-        // 3) loop principal: arrefecer até minTemp ou atingir maxIter
-        while (T > minTemp && iteration < maxIter) {
+        // 3) Loop principal: Enquanto nenhum dos critérios de paragem for ativado, continuar
+        while (!stopCriterionMethod(T, iteration, acceptedMoves, totalMoves, noImprovementCount)) {
             // por cada temperatura, fazer iterPerTemp iterações (ou até maxIter)
             for (int k = 0; k < iterPerTemp && iteration < maxIter; k++) {
                 Solution next = neighbor(current);
                 int delta = next.getCost() - current.getCost();
+                totalMoves++;
 
                 // Aceitação: melhor é sempre aceite; pior é aceite apenas com probabilidade exp(-delta/T)
                 if (delta < 0 || rng.nextDouble() < Math.exp(-delta / T)) {
                     current = next;
+                    acceptedMoves++;
+                } else {
+                    noImprovementCount++;
                 }
 
                 // Atualiza a melhor solução
@@ -157,8 +217,8 @@ public class SimulatedAnnealing {
                 iteration++;
             }
 
-            // Decaimento geométrico da temperatura
-            T *= alpha;
+            // Decaimento escolhido
+            T = decayTemperature(T, iteration, decayMethod);
 
             // Guarda a última solução
             last = current.cloneSolution();
