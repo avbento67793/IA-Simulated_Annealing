@@ -70,7 +70,7 @@ public class SimulatedAnnealing {
         this.iterPerTemp = Math.max(100, n * 20);
         this.maxIter = Math.max(1000, n * 5000);
 
-        System.out.println("=== Parâmetros ajustados automaticamente ===");
+        System.out.println("\n=== Parâmetros ajustados automaticamente ===");
         System.out.printf("Cidades: %d | Dist. média: %.2f%n", n, avgDist);
         System.out.printf("T0 = %.2f | alpha = %.4f | minTemp = %.4f%n", this.T0, this.alpha, this.minTemp);
         System.out.printf("Iterações/Temp = %d | Máx Iterações = %d%n", this.iterPerTemp, this.maxIter);
@@ -125,19 +125,15 @@ public class SimulatedAnnealing {
         switch (method.toLowerCase()) {
             case "geometric":
                 return T * this.alpha;
-
             case "linear":
                 double beta = (this.T0 - this.minTemp) / this.maxIter;
                 return Math.max(this.minTemp, T - beta);
-
             case "logarithmic":
                 return this.T0 / Math.log(2 + iteration);
-
             case "gradual":
                 double fraction = (double) iteration / this.maxIter;
                 double adaptiveAlpha = 1.0 - 0.5 * fraction;
                 return Math.max(this.minTemp, T * adaptiveAlpha);
-
             default:
                 return T * this.alpha; // Decaimento geométrico por ser o mais comum
         }
@@ -172,18 +168,22 @@ public class SimulatedAnnealing {
     private boolean stopCriterionMethod(double T, int iteration, int acceptedMoves, int totalMoves, int noImprovementCount) {
         double acceptance_rate = (double) acceptedMoves/totalMoves;
         if (T <= this.minTemp) {
-            System.out.printf("\nTemperatura Mínima Atingida: %-12.3f%n", T);
+            System.out.println("\n===== STOP CRITERION =====");
+            System.out.printf("Temperatura Mínima Atingida: %-12.3f%n", T);
             return true;
         } else if (iteration == this.maxIter) {
-            System.out.println("\nIteração máxima atingida: " + iteration);
+            System.out.println("\n===== STOP CRITERION =====");
+            System.out.println("Iteração máxima atingida: " + iteration);
             return true;
         }  else if (acceptance_rate < MIN_ACCEPTANCE_RATE) {
-            System.out.println("\nAcceptedMoves: " + acceptedMoves);
+            System.out.println("\n===== STOP CRITERION =====");
+            System.out.println("AcceptedMoves: " + acceptedMoves);
             System.out.println("TotalMoves: " + totalMoves);
             System.out.printf("Acceptance rate: %-12.3f%n", acceptance_rate);
             return true;
         } else if (noImprovementCount > NO_IMPROVEMENT_LIMIT) {
-            System.out.println("\nNo improvement count: " + noImprovementCount);
+            System.out.println("\n===== STOP CRITERION =====");
+            System.out.println("No improvement count: " + noImprovementCount);
             return true;
         }
         return false;
@@ -212,12 +212,15 @@ public class SimulatedAnnealing {
         int totalMoves = 0;
         int noImprovementCount = 0;
 
+        // Variável para verifica se ocorreu um ‘stop’ 'criterion' dentro do 'for'
+        boolean exit = false;
+
         long start = System.currentTimeMillis();
 
-        System.out.println("\n=== Início da execução do Simulated Annealing ===");
+        System.out.println("\n==== Início da execução do Simulated Annealing ====");
         System.out.printf("Método de decaimento da temperatura: %s%n", this.decayMethod);
         System.out.printf("Método de variação de iterações por temperatura: %s%n", this.iterMethod);
-        System.out.println("------------------------------------------------------------");
+        System.out.println("------------------------------------------------------------\n");
 
 
         // Loop principal — enquanto não atingir critério de paragem
@@ -228,6 +231,7 @@ public class SimulatedAnnealing {
 
             for (int k = 0; k < currentIterPerTemp && iteration < this.maxIter; k++) {
                 if (stopCriterionMethod(T, iteration, acceptedMoves, totalMoves, noImprovementCount)) {
+                    exit = true;
                     break;
                 }
                 Solution next = neighbor(current);
@@ -264,6 +268,11 @@ public class SimulatedAnnealing {
             last = current;
             lastTemp = T;
             lastIter = iteration;
+
+            // Verifica se ocorreu um ‘stop’ 'criterion' dentro do 'for'
+            if (exit) {
+                break;
+            }
         }
 
         long end = System.currentTimeMillis();
