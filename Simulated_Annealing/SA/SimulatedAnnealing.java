@@ -170,15 +170,23 @@ public class SimulatedAnnealing {
 
     // Verifica se algum critério de paragem foi ativado
     private boolean stopCriterionMethod(double T, int iteration, int acceptedMoves, int totalMoves, int noImprovementCount) {
+        double acceptance_rate = (double) acceptedMoves/totalMoves;
         if (T <= this.minTemp) {
+            System.out.printf("\nTemperatura Mínima Atingida: %-12.3f%n", T);
             return true;
         } else if (iteration == this.maxIter) {
+            System.out.println("\nIteração máxima atingida: " + iteration);
             return true;
-        }  else if ((double) acceptedMoves / totalMoves < MIN_ACCEPTANCE_RATE) {
+        }  else if (acceptance_rate < MIN_ACCEPTANCE_RATE) {
+            System.out.println("\nAcceptedMoves: " + acceptedMoves);
+            System.out.println("TotalMoves: " + totalMoves);
+            System.out.printf("Acceptance rate: %-12.3f%n", acceptance_rate);
             return true;
-        } else {
-            return noImprovementCount > NO_IMPROVEMENT_LIMIT;
+        } else if (noImprovementCount > NO_IMPROVEMENT_LIMIT) {
+            System.out.println("\nNo improvement count: " + noImprovementCount);
+            return true;
         }
+        return false;
     }
 
     public void run() {
@@ -214,7 +222,6 @@ public class SimulatedAnnealing {
 
         // Loop principal — enquanto não atingir critério de paragem
         while (!stopCriterionMethod(T, iteration, acceptedMoves, totalMoves, noImprovementCount)) {
-
             // Varia o número de iterações por temperatura, consoante o tipo escolhido
             int currentIterPerTemp = varyIterationsPerTemp(this.iterPerTemp, iteration, this.iterMethod);
             System.out.println("Número de iterações por temperatura: " + currentIterPerTemp);
@@ -228,7 +235,7 @@ public class SimulatedAnnealing {
                 totalMoves++;
 
                 // Critério de aceitação
-                if (delta < 0 || this.rng.nextDouble() < Math.exp(-delta / T)) {
+                if (delta < 0 || this.rng.nextDouble() < Math.exp(-delta / T)) { // this.rng.nextDouble retorna um número aleatório entre 0.0 e 1.0 inclusive
                     current = next;
                     acceptedMoves++;
                 } else {
@@ -261,15 +268,11 @@ public class SimulatedAnnealing {
 
         long end = System.currentTimeMillis();
 
-        System.out.println("\nNo improvement count: " + noImprovementCount);
-        System.out.println("Accepted moves: " + acceptedMoves);
-        System.out.println("Total moves: " + totalMoves);
-
-        // Apresentação dos resultados finais
+        // Apresentação dos resultados
         System.out.println("\n===== RESULTADOS =====");
         System.out.printf("%-18s %-55s %-12s %-12s %-12s%n",
                 "Tipo de Solução:", "Caminho (Percurso)", "Custo (Km)", "Iteração", "Temperatura");
-        System.out.println("---------------------------------------------------------------------------------------------------------------");
+        System.out.println("----------------------------------------------------------------------------------------------------------------");
         System.out.printf("%-18s %-55s %-10d %-12d %-12.3f%n",
                 "Primeira solução:", first.getPath(), first.getCost(), firstIter, firstTemp);
         System.out.printf("%-18s %-55s %-10d %-12d %-12.3f%n",

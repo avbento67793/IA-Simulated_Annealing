@@ -1,7 +1,6 @@
 package Solutions;
 
 import distanceMatrix.DistanceMatrix;
-
 import java.util.ArrayList;
 
 public class Solution {
@@ -13,6 +12,7 @@ public class Solution {
         this.cost = Integer.MAX_VALUE; // inicial
     }
 
+    // Calcula o custo total da solução
     public void evaluate(DistanceMatrix m) {
         int total = 0;
         for (int i = 0; i < path.size() - 1; i++) {
@@ -23,10 +23,12 @@ public class Solution {
         this.cost = total;
     }
 
+    // Retorna o custo da solução
     public int getCost() {
         return cost;
     }
 
+    // Retorna o path da solução
     public ArrayList<String> getPath() {
         return path;
     }
