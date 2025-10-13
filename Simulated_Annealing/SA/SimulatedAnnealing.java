@@ -110,7 +110,7 @@ public class SimulatedAnnealing {
         Collections.reverse(path.subList(i, j + 1));
 
 
-        Solution newSol = new Solution(path); // Cria uma nova solução com este novo caminho (vizinho)
+        Solution newSol = new Solution(path);      // Cria uma solução com este novo caminho (vizinho)
         newSol.evaluate(this.matrix);              // Calcula o custo total (distância percorrida na nova rota)
         return newSol;
     }
@@ -156,7 +156,7 @@ public class SimulatedAnnealing {
                 return baseIter + (iteration / 1000);
             case "exponential":
                 // Aumenta exponencialmente
-                return (int) (baseIter * Math.pow(1.02, iteration / 5000.0));
+                return (int) (baseIter * Math.pow(1.5, iteration / 5000.0));
             case "random":
                 // Adiciona uma pequena flutuação aleatória
                 return baseIter + this.rng.nextInt(Math.max(1, baseIter / 5));
@@ -217,13 +217,17 @@ public class SimulatedAnnealing {
 
             // Varia o número de iterações por temperatura, consoante o tipo escolhido
             int currentIterPerTemp = varyIterationsPerTemp(this.iterPerTemp, iteration, this.iterMethod);
+            System.out.println("Número de iterações por temperatura: " + currentIterPerTemp);
 
             for (int k = 0; k < currentIterPerTemp && iteration < this.maxIter; k++) {
+                if (stopCriterionMethod(T, iteration, acceptedMoves, totalMoves, noImprovementCount)) {
+                    break;
+                }
                 Solution next = neighbor(current);
                 int delta = next.getCost() - current.getCost();
                 totalMoves++;
 
-                // Critério de aceitação de Metropolis
+                // Critério de aceitação
                 if (delta < 0 || this.rng.nextDouble() < Math.exp(-delta / T)) {
                     current = next;
                     acceptedMoves++;
@@ -256,6 +260,10 @@ public class SimulatedAnnealing {
         }
 
         long end = System.currentTimeMillis();
+
+        System.out.println("\nNo improvement count: " + noImprovementCount);
+        System.out.println("Accepted moves: " + acceptedMoves);
+        System.out.println("Total moves: " + totalMoves);
 
         // Apresentação dos resultados finais
         System.out.println("\n===== RESULTADOS =====");

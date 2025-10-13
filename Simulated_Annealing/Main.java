@@ -53,7 +53,7 @@ public class Main {
             default -> "";
         };
 
-        SimulatedAnnealing sa = new SimulatedAnnealing(mE1);
+        SimulatedAnnealing sa = new SimulatedAnnealing(m);
         sa.setDecayMethod(methodDecay);
         sa.setIterMethod(methodIter);
 
