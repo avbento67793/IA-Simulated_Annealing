@@ -9,7 +9,6 @@ public class SimulatedAnnealing {
     private final DistanceMatrix matrix;
     private final List<String> cities;
 
-    // Parameters to use
     private double T0;
     private double alpha;
     private double minTemp;
@@ -22,7 +21,7 @@ public class SimulatedAnnealing {
     private final static double GRADUAL_BETA = 0.001;
     private final static int LOGARITHMIC_CONSTANT = 275;
 
-    // Stop criteria parameters
+    // Stopping criteria Constants
     private final static int NO_IMPROVEMENT_LIMIT = 5000;
     private final static double MIN_ACCEPTANCE_RATE = 0.01;
 
@@ -51,6 +50,7 @@ public class SimulatedAnnealing {
         return s;
     }
 
+    // Set the value of the initial Temperature if it was given by the user
     public void setInitialTemperature(double initialT0) {
         this.T0 = initialT0;
     }
@@ -125,12 +125,12 @@ public class SimulatedAnnealing {
         return newSol;
     }
 
-    // Set temperature decay method
+    // Set temperature decay method that was given by the user
     public void setTemperatureDecayMethod(String decay) {
         this.decayMethod = decay.toLowerCase();
     }
 
-    // Compute new temperature based on selected decay type
+    // Calculate the new temperature based on chosen decay method
     private double decayTemperature(double T, int iteration, String method) {
         switch (method.toLowerCase()) {
             case "linear":
@@ -139,21 +139,20 @@ public class SimulatedAnnealing {
                 // Gradual cooling formula: Tk = Tk-1 / (1 + beta * Tk-1)
                 return T / (1 + GRADUAL_BETA * T);
             case "logarithmic":
-                // As decay only happens after initial iterations per temperature,
-                // iteration will always be > 0, avoiding log(0)
+                // As decay only happens after initial iterations per temperature, iteration will always be > 0, avoiding log(0)
                 return this.T0 - LOGARITHMIC_CONSTANT * Math.log(iteration);
             case "geometric":
             default:
-                return T * this.alpha; // Default = geometric decay
+                return T * this.alpha; // geometric = default = geometric decay
         }
     }
 
-    // Set iteration variation method
+    // Set iteration variation method that was given by the user
     public void setIterVariationMethod(String iter) {
         this.iterMethod = iter.toLowerCase();
     }
 
-    // Compute number of iterations per temperature based on chosen method
+    // Calculate the number of iterations per temperature based on chosen method
     private int varyIterationsPerTemp(int baseIter, int iteration, String method) {
         switch (method.toLowerCase()) {
             case "linear":
@@ -164,7 +163,7 @@ public class SimulatedAnnealing {
                 return baseIter + this.rng.nextInt(Math.max(1, baseIter / 5));
             case "constant":
             default:
-                return baseIter;
+                return baseIter; // constant = default = baseIter (no variation of the Iterations per Temperature)
         }
     }
 
@@ -206,7 +205,7 @@ public class SimulatedAnnealing {
 
         // Initialize solutions
         Solution current = createInitialSolution(); // Current solution
-        current.evaluate(this.matrix);              // Evaluate its cost
+        current.evaluate(this.matrix);              // Evaluate current solution cost
         Solution best = current;                    // Best solution so far
         Solution worst = current;                   // Worst solution so far
         Solution first = current;                   // First solution
