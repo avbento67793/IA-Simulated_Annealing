@@ -74,8 +74,8 @@ public class SimulatedAnnealing {
         System.out.println("\n==== Parâmetros ajustados automaticamente ====");
         System.out.printf("Cidades: %d | Dist. média: %.2f%n", n, avgDist);
         System.out.printf("T0 = %.2f | alpha = %.4f | minTemp = %.4f%n", this.T0, this.alpha, this.minTemp);
-        System.out.printf("Iterações/Temp = %d | Máx Iterações = %d%n", this.iterPerTemp, this.maxIter);
-    }
+        System.out.printf("Iterações/Temp = %d | Máx Iterações = %d%n", this.iterPerTemp, this.maxIter); // Apenas é usado este número de Iterações por Temperatura caso o tipo escolhido seja 'constant'
+    }                                                                                                    // Se outro tipo for escolhido serve de base para o cálculo do novo valor de Iterações por Temperatura
 
     // Calcula a média das distâncias
     private double averageDistance() {
@@ -202,7 +202,7 @@ public class SimulatedAnnealing {
         Solution first = current;
         Solution last = current;
 
-        // Variáveis locais para guardar info sobre cada tipo de solução
+        // Variáveis locais para guardar a informação sobre cada tipo de solução
         double firstTemp = this.T0, lastTemp = 0.0, bestTemp = 0.0, worstTemp = 0.0;
         int firstIter = 0, lastIter = 0, bestIter = 0, worstIter = 0;
 
@@ -223,16 +223,14 @@ public class SimulatedAnnealing {
         System.out.printf("Método de variação de iterações por temperatura: %s%n", this.iterMethod);
         System.out.println("------------------------------------------------------------\n");
 
+        System.out.println("Número de iterações por temperatura inicial: " + this.iterPerTemp);
 
         // Loop principal — enquanto não atingir critério de paragem
         while (!stopCriterionMethod(T, iteration, acceptedMoves, totalMoves, noImprovementCount)) {
-            // Varia o número de iterações por temperatura, consoante o tipo escolhido
-            int currentIterPerTemp = varyIterationsPerTemp(this.iterPerTemp, iteration, this.iterMethod);
-            System.out.println("Número de iterações por temperatura: " + currentIterPerTemp);
 
-            for (int k = 0; k < currentIterPerTemp; k++) {
+            for (int k = 0; k < this.iterPerTemp; k++) {
                 if (stopCriterionMethod(T, iteration, acceptedMoves, totalMoves, noImprovementCount)) {
-                    exit = true;
+                    exit = true; // Caso tenha ocorrido um critério de paragem durante a execução do 'for' loop saímos
                     break;
                 }
                 Solution next = neighbor(current);
@@ -262,9 +260,6 @@ public class SimulatedAnnealing {
                 iteration++;
             }
 
-            // Atualiza temperatura conforme o tipo de decaimento escolhido
-            T = decayTemperature(T, iteration, this.decayMethod);
-
             // Guardar última solução
             last = current;
             lastTemp = T;
@@ -275,6 +270,13 @@ public class SimulatedAnnealing {
             if (exit) {
                 break;
             }
+
+            // Varia o número de iterações por temperatura, consoante o tipo escolhido
+            this.iterPerTemp = varyIterationsPerTemp(this.iterPerTemp, iteration, this.iterMethod);
+            System.out.println("Número de iterações por temperatura atual: " + this.iterPerTemp);
+
+            // Atualiza temperatura conforme o tipo de decaimento escolhido
+            T = decayTemperature(T, iteration, this.decayMethod);
         }
 
         long end = System.currentTimeMillis();
@@ -284,13 +286,13 @@ public class SimulatedAnnealing {
         System.out.printf("%-18s %-55s %-12s %-12s %-12s%n",
                 "Tipo de Solução:", "Caminho (Percurso)", "Custo (Km)", "Iteração", "Temperatura");
         System.out.println("----------------------------------------------------------------------------------------------------------------");
-        System.out.printf("%-18s %-55s %-10d %-12d %-12.3f%n",
+        System.out.printf("%-18s %-55s %-10d %-12d %-12.2f%n",
                 "Primeira solução:", first.getPath(), first.getCost(), firstIter, firstTemp);
-        System.out.printf("%-18s %-55s %-10d %-12d %-12.3f%n",
+        System.out.printf("%-18s %-55s %-10d %-12d %-12.2f%n",
                 "Última solução:", last.getPath(), last.getCost(), lastIter, lastTemp);
-        System.out.printf("%-18s %-55s %-10d %-12d %-12.3f%n",
+        System.out.printf("%-18s %-55s %-10d %-12d %-12.2f%n",
                 "Melhor solução:", best.getPath(), best.getCost(), bestIter, bestTemp);
-        System.out.printf("%-18s %-55s %-10d %-12d %-12.3f%n",
+        System.out.printf("%-18s %-55s %-10d %-12d %-12.2f%n",
                 "Pior solução:", worst.getPath(), worst.getCost(), worstIter, worstTemp);
 
         System.out.println("\nIterações totais: " + iteration);

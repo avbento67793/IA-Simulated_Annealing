@@ -42,9 +42,9 @@ public class Main {
         System.out.println("3 - random");
         System.out.println("4 - constant");
         System.out.print("Opção: ");
-        int optIter = in.nextInt();
+        int optIterPerTemp = in.nextInt();
 
-        String methodIter = switch (optIter) {
+        String methodIter = switch (optIterPerTemp) {
             case 1 -> "linear";
             case 2 -> "exponential";
             case 3 -> "random";
