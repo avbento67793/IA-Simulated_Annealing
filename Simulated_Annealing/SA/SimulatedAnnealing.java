@@ -62,10 +62,8 @@ public class SimulatedAnnealing {
         double avgDist = averageDistance();
         if (this.T0 == 0.0) {
             this.T0 = avgDist * 10.0;
-            this.minTemp = this.T0 / 1000.0;
-        } else {
-            this.minTemp = this.T0 / 1000.0;
         }
+        this.minTemp = this.T0 / 1000.0;
 
         if (n <= 7) this.alpha = 0.8;
         else if (n <= 14) this.alpha = 0.9;
