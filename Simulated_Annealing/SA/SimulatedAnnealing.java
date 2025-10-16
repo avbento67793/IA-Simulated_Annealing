@@ -95,22 +95,33 @@ public class SimulatedAnnealing {
         return total / count;
     }
 
-    // Generates a neighbor solution using the 2-opt swap
+    // Generates a neighbor solution using the 2-opt swap using delta cost
     private Solution neighbor(Solution current) {
-        // Copy current path to avoid modifying the original
         ArrayList<String> path = new ArrayList<>(current.getPath());
         int n = path.size();
 
-        // Pick two random indices i < j
+        // Pick two random non-consecutive indices i < j
         int i = this.rng.nextInt(n - 1);
         int j = i + 1 + this.rng.nextInt(n - i - 1);
 
-        // 2-opt move: reverse the segment between i and j (inclusive)
-        // Example: [A, B, C, D, E, F] → if i = 1, j = 4 → [A, E, D, C, B, F]
-        Collections.reverse(path.subList(i, j + 1));
+        // Calculate the delta cost for the 2-opt swap
+        int a = i;
+        int b = i + 1;
+        int c = j;
+        int d = (j + 1) % n; // wrap around to the first city if j is the last
+        // delta = (new edges) - (old edges)
+        int delta = matrix.distance(path.get(a), path.get(c))
+                + matrix.distance(path.get(b), path.get(d))
+                - matrix.distance(path.get(a), path.get(b))
+                - matrix.distance(path.get(c), path.get(d));
 
+        // Apply the 2-opt move: reverse the segment between i+1 and j (inclusive)
+        // Example: [A, B, C, D, E, F], i=1, j=4 → [A, B, E, D, C, F]
+        Collections.reverse(path.subList(i + 1, j + 1));
+
+        // Create new solution with updated cost using delta
         Solution newSol = new Solution(path);
-        newSol.evaluate(this.matrix);
+        newSol.setCost(current.getCost() + delta);
         return newSol;
     }
 
@@ -184,36 +195,40 @@ public class SimulatedAnnealing {
 
     // Main loop: Simulated Annealing
     public void run() {
-        // Auto configuration
+        // Check if there are enough cities to proceed
         if (this.cities.size() < 2) {
             System.out.println("There must be at least 2 cities.");
             return;
         }
+
+        // Automatically adjust parameters based on problem size
         autoAdjustParameters();
 
         // Initialize solutions
-        Solution current = createInitialSolution();
-        current.evaluate(this.matrix);
-        Solution best = current;
-        Solution worst = current;
-        Solution first = current;
-        Solution last = current;
+        Solution current = createInitialSolution(); // Current solution
+        current.evaluate(this.matrix);              // Evaluate its cost
+        Solution best = current;                    // Best solution so far
+        Solution worst = current;                   // Worst solution so far
+        Solution first = current;                   // First solution
+        Solution last = current;                    // Last solution
 
-        // Variables to track each type of solution
+        // Track additional info for each type of solution
         double firstTemp = this.T0, lastTemp = 0.0, bestTemp = 0.0, worstTemp = 0.0;
         int firstIter = 0, lastIter = 0, bestIter = 0, worstIter = 0;
 
+        // Initialize temperature and iteration counters
         double T = this.T0;
         int iteration = 0;
 
+        // Counters for acceptance rate and stagnation
         int acceptedMoves = 0;
         int totalMoves = 0;
         int noImprovementCount = 0;
 
-        // Variable to check if a stopping criteria occurred inside the loop
+        // Flag to exit the main loop early if a stop criterion is met inside the for-loop
         boolean exit = false;
 
-        long start = System.currentTimeMillis();
+        long start = System.currentTimeMillis(); // Start measuring execution time
 
         System.out.println("\n==== Starting Simulated Annealing ====");
         System.out.printf("Temperature Decay Method: %s%n", this.decayMethod);
@@ -221,27 +236,34 @@ public class SimulatedAnnealing {
         System.out.println("------------------------------------------------------------\n");
         System.out.println("Initial Iterations per Temperature: " + this.iterPerTemp);
 
-        // Main loop
+        // Main loop: repeat until a stopping criterion is met
         while (!stopCriterionMethod(T, iteration, acceptedMoves, totalMoves, noImprovementCount)) {
 
+            // Loop for a fixed number of iterations at the current temperature
             for (int k = 0; k < this.iterPerTemp; k++) {
+                // Early exit if any stop criterion is triggered
                 if (stopCriterionMethod(T, iteration, acceptedMoves, totalMoves, noImprovementCount)) {
                     exit = true;
                     break;
                 }
+
+                // Generate a neighbor solution using 2-opt swap
                 Solution next = neighbor(current);
+
+                // Calculate the change in cost (delta) between current and neighbor
                 int delta = next.getCost() - current.getCost();
-                totalMoves++;
+                totalMoves++; // Count total moves
 
                 // Acceptance criterion
+                // Accept if neighbor is better (delta < 0) or with probability exp(-delta/T)
                 if (delta < 0 || this.rng.nextDouble() < Math.exp(-delta / T)) {
                     current = next;
-                    acceptedMoves++;
+                    acceptedMoves++; // Increment accepted moves
                 } else {
-                    noImprovementCount++;
+                    noImprovementCount++; // Increment rejected moves (no improvement)
                 }
 
-                // Update best/worst
+                // Update best and worst solutions if necessary
                 if (current.getCost() < best.getCost()) {
                     best = current;
                     bestTemp = T;
@@ -253,27 +275,28 @@ public class SimulatedAnnealing {
                     worstIter = iteration;
                 }
 
-                iteration++;
+                iteration++; // Increment overall iteration count
             }
 
-            // Update last solution
+            // Update the last solution at the current temperature
             last = current;
             lastTemp = T;
             lastIter = iteration;
 
+            // Break main loop if early exit was triggered
             if (exit) break;
 
-            // Update number of iterations per temperature
+            // Update number of iterations per temperature based on selected variation method
             this.iterPerTemp = varyIterationsPerTemp(this.iterPerTemp, iteration, this.iterMethod);
             System.out.println("Current Iterations per Temperature: " + this.iterPerTemp);
 
-            // Update temperature
+            // Update temperature according to the selected decay method
             T = decayTemperature(T, iteration, this.decayMethod);
         }
 
-        long end = System.currentTimeMillis();
+        long end = System.currentTimeMillis(); // End measuring execution time
 
-        // Display results
+        // Display final results
         System.out.println("\n===== RESULTS =====");
         System.out.printf("%-18s %-55s %-12s %-12s %-12s%n",
                 "Solution Type:", "Path", "Cost (Km)", "Iteration", "Temperature");

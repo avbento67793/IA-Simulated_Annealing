@@ -12,6 +12,10 @@ public class Solution {
         this.cost = Integer.MAX_VALUE; // initial cost (very high value)
     }
 
+    public void setCost(int i) {
+        this.cost = i;
+    }
+
     // Calculates the total cost of the solution
     public void evaluate(DistanceMatrix m) {
         int total = 0;
