@@ -60,9 +60,11 @@ public class SimulatedAnnealing {
         int n = this.cities.size();
 
         double avgDist = averageDistance();
-        if (this.T0 == 0.0) {
-            this.T0 = avgDist * 10.0;
-        }
+
+        // Checks whether the initial temperature (T0) was provided by the user.
+        // If not (T0 == 0.0), it is automatically calculated based on the average distance.
+        if (this.T0 == 0.0) this.T0 = avgDist * 10.0;
+
         this.minTemp = this.T0 / 1000.0;
 
         if (n <= 7) this.alpha = 0.8;
@@ -90,7 +92,7 @@ public class SimulatedAnnealing {
                 count++; // Count number of city pairs considered
             }
         }
-        return total / Math.max(1, count);
+        return total / count;
     }
 
     // Generates a neighbor solution using the 2-opt swap
