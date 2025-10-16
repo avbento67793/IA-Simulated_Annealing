@@ -6,52 +6,23 @@ public class Main {
     public static void main(String[] args) {
         Scanner in = new Scanner(System.in);
 
-        // Load the distance matrix file
-        DistanceMatrix m = new DistanceMatrix("distancias.txt");
-
-        // Example E1
-        ArrayList<String> E1 = new ArrayList<>(Arrays.asList("Atroeira", "Douro", "Pinhal", "Teixoso", "Ulgueira", "Vilar"));
-        DistanceMatrix mE1 = new DistanceMatrix(m, E1);
-
-        // Example E2
-        ArrayList<String> E2 = new ArrayList<>(Arrays.asList("Cerdeira", "Douro", "Gonta", "Infantado", "Lourel", "Nelas", "Oura", "Quebrada", "Roseiral", "Serra", "Teixoso", "Ulgueira"));
-        DistanceMatrix mE2 = new DistanceMatrix(m, E2);
-
-        // Example E3
-        ArrayList<String> E3 = new ArrayList<>(Arrays.asList("Belmar", "Cerdeira", "Douro", "Encosta", "Freita", "Gonta", "Horta", "Infantado", "Lourel", "Monte", "Nelas", "Oura", "Pinhal", "Quebrada", "Roseiral", "Serra", "Teixoso", "Ulgueira"));
-        DistanceMatrix mE3 = new DistanceMatrix(m, E3);
-
-        // Example E4 -> All Cities
-
         System.out.println("Choose a set of cities to use:");
         System.out.println("1 - Example E1");
         System.out.println("2 - Example E2");
         System.out.println("3 - Example E3");
         System.out.println("4 - All cities");
         System.out.print("Option: ");
-        int optCities = in.nextInt();
+        int optMatrix = in.nextInt();
 
-        DistanceMatrix selectedMatrix;
-
-        switch(optCities) {
-            case 1 -> selectedMatrix = mE1;
-            case 2 -> selectedMatrix = mE2;
-            case 3 -> selectedMatrix = mE3;
-            case 4 -> selectedMatrix = m; // **All cities**
-            default -> selectedMatrix = m; // default = all cities
-        }
-
-        // Create the Simulated Annealing object
-        SimulatedAnnealing sa = new SimulatedAnnealing(selectedMatrix);
+        SimulatedAnnealing sa = new SimulatedAnnealing(getCitiesMatrix(optMatrix));
 
         // Ask user to choose weather he prefers to set the initial temperature or not
         System.out.println("\nDo you want to set an initial temperature manually? (y/n): ");
         String setT0 = in.next();
 
-        double initialT0 = -1;
         if (setT0.equalsIgnoreCase("y")) {
             System.out.println("Enter the initial temperature (T0): ");
-            initialT0 = in.nextDouble();
+            double initialT0 = in.nextDouble();
             sa.setInitialTemperature(initialT0);
         }
 
@@ -77,5 +48,36 @@ public class Main {
 
         // Simulated Annealing execution
         sa.run();
+    }
+
+    private static DistanceMatrix getCitiesMatrix(int optCities) {
+        // Load the distance matrix file
+        DistanceMatrix m = new DistanceMatrix("distancias.txt");
+
+        // Example E1
+        ArrayList<String> E1 = new ArrayList<>(Arrays.asList("Atroeira", "Douro", "Pinhal", "Teixoso", "Ulgueira", "Vilar"));
+        DistanceMatrix mE1 = new DistanceMatrix(m, E1);
+
+        // Example E2
+        ArrayList<String> E2 = new ArrayList<>(Arrays.asList("Cerdeira", "Douro", "Gonta", "Infantado", "Lourel", "Nelas", "Oura", "Quebrada", "Roseiral", "Serra", "Teixoso", "Ulgueira"));
+        DistanceMatrix mE2 = new DistanceMatrix(m, E2);
+
+        // Example E3
+        ArrayList<String> E3 = new ArrayList<>(Arrays.asList("Belmar", "Cerdeira", "Douro", "Encosta", "Freita", "Gonta", "Horta", "Infantado", "Lourel", "Monte", "Nelas", "Oura", "Pinhal", "Quebrada", "Roseiral", "Serra", "Teixoso", "Ulgueira"));
+        DistanceMatrix mE3 = new DistanceMatrix(m, E3);
+
+        // Example E4 -> All Cities
+
+        switch(optCities) {
+            case 1:
+                return mE1;// mE1;
+            case 2:
+                return mE2; // mE2;
+            case 3:
+                return mE3; // mE3
+            case 4:
+            default:
+                return m; // case 4 = default = all cities = m
+        }
     }
 }

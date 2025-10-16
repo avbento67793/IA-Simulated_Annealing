@@ -122,8 +122,6 @@ public class SimulatedAnnealing {
     // Compute new temperature based on selected decay type
     private double decayTemperature(double T, int iteration, String method) {
         switch (method.toLowerCase()) {
-            case "geometric":
-                return T * this.alpha;
             case "linear":
                 return T - this.minTemp;
             case "gradual":
@@ -133,8 +131,9 @@ public class SimulatedAnnealing {
                 // As decay only happens after initial iterations per temperature,
                 // iteration will always be > 0, avoiding log(0)
                 return this.T0 - LOGARITHMIC_CONSTANT * Math.log(iteration);
+            case "geometric":
             default:
-                return T * this.alpha; // Default: geometric decay
+                return T * this.alpha; // Default = geometric decay
         }
     }
 
@@ -153,7 +152,6 @@ public class SimulatedAnnealing {
             case "random":
                 return baseIter + this.rng.nextInt(Math.max(1, baseIter / 5));
             case "constant":
-                return baseIter;
             default:
                 return baseIter;
         }
@@ -184,6 +182,7 @@ public class SimulatedAnnealing {
         return false;
     }
 
+    // Main loop: Simulated Annealing
     public void run() {
         // Auto configuration
         if (this.cities.size() < 2) {
