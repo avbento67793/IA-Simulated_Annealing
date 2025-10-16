@@ -19,12 +19,12 @@ public class SimulatedAnnealing {
     private String iterMethod;
 
 
-    // Parâmetros a usar para o stop criterion
+    // Parâmetros a usar para o critério de paragem
     private final static int NO_IMPROVEMENT_LIMIT = 5000;
     private final static double MIN_ACCEPTANCE_RATE = 0.01;
 
     // Random partilhado
-    private final Random rng = new Random();
+    private final Random rng;
 
     public SimulatedAnnealing(DistanceMatrix matrix) {
         this.matrix = matrix;
@@ -36,6 +36,7 @@ public class SimulatedAnnealing {
         this.minTemp = 0.0;
         this.iterPerTemp = 0;
         this.maxIter = 0;
+        this.rng = new Random();
     }
 
     // Gera solução inicial (permutação aleatória)
@@ -70,7 +71,7 @@ public class SimulatedAnnealing {
         this.iterPerTemp = Math.max(100, n * 20);
         this.maxIter = Math.max(1000, n * 5000);
 
-        System.out.println("\n=== Parâmetros ajustados automaticamente ===");
+        System.out.println("\n==== Parâmetros ajustados automaticamente ====");
         System.out.printf("Cidades: %d | Dist. média: %.2f%n", n, avgDist);
         System.out.printf("T0 = %.2f | alpha = %.4f | minTemp = %.4f%n", this.T0, this.alpha, this.minTemp);
         System.out.printf("Iterações/Temp = %d | Máx Iterações = %d%n", this.iterPerTemp, this.maxIter);
@@ -212,7 +213,7 @@ public class SimulatedAnnealing {
         int totalMoves = 0;
         int noImprovementCount = 0;
 
-        // Variável para verifica se ocorreu um ‘stop’ 'criterion' dentro do 'for'
+        // Variável para verifica se ocorreu um critério de paragem dentro do 'for' loop
         boolean exit = false;
 
         long start = System.currentTimeMillis();
@@ -229,7 +230,7 @@ public class SimulatedAnnealing {
             int currentIterPerTemp = varyIterationsPerTemp(this.iterPerTemp, iteration, this.iterMethod);
             System.out.println("Número de iterações por temperatura: " + currentIterPerTemp);
 
-            for (int k = 0; k < currentIterPerTemp && iteration < this.maxIter; k++) {
+            for (int k = 0; k < currentIterPerTemp; k++) {
                 if (stopCriterionMethod(T, iteration, acceptedMoves, totalMoves, noImprovementCount)) {
                     exit = true;
                     break;
@@ -269,7 +270,8 @@ public class SimulatedAnnealing {
             lastTemp = T;
             lastIter = iteration;
 
-            // Verifica se ocorreu um ‘stop’ 'criterion' dentro do 'for'
+            // Verifica se ocorreu um critério de paragem dentro do 'for' loop
+            // Caso seja true saímos do loop principal.
             if (exit) {
                 break;
             }
