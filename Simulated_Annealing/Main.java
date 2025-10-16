@@ -4,6 +4,8 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
+        Scanner in = new Scanner(System.in);
+
         // Load the distance matrix file
         DistanceMatrix m = new DistanceMatrix("distancias.txt");
 
@@ -19,65 +21,61 @@ public class Main {
         ArrayList<String> E3 = new ArrayList<>(Arrays.asList("Belmar", "Cerdeira", "Douro", "Encosta", "Freita", "Gonta", "Horta", "Infantado", "Lourel", "Monte", "Nelas", "Oura", "Pinhal", "Quebrada", "Roseiral", "Serra", "Teixoso", "Ulgueira"));
         DistanceMatrix mE3 = new DistanceMatrix(m, E3);
 
-        Scanner in = new Scanner(System.in);
+        // Example E4 -> All Cities
+
+        System.out.println("Choose a set of cities to use:");
+        System.out.println("1 - Example E1");
+        System.out.println("2 - Example E2");
+        System.out.println("3 - Example E3");
+        System.out.println("4 - All cities");
+        System.out.print("Option: ");
+        int optCities = in.nextInt();
+
+        DistanceMatrix selectedMatrix;
+
+        switch(optCities) {
+            case 1 -> selectedMatrix = mE1;
+            case 2 -> selectedMatrix = mE2;
+            case 3 -> selectedMatrix = mE3;
+            case 4 -> selectedMatrix = m; // **All cities**
+            default -> selectedMatrix = m; // default = all cities
+        }
+
+        // Create the Simulated Annealing object
+        SimulatedAnnealing sa = new SimulatedAnnealing(selectedMatrix);
 
         // Ask user to choose weather he prefers to set the initial temperature or not
-        System.out.println("Do you want to set an initial temperature manually? (y/n): ");
+        System.out.println("\nDo you want to set an initial temperature manually? (y/n): ");
         String setT0 = in.next();
 
         double initialT0 = -1;
         if (setT0.equalsIgnoreCase("y")) {
             System.out.println("Enter the initial temperature (T0): ");
             initialT0 = in.nextDouble();
+            sa.setInitialTemperature(initialT0);
         }
 
         // Ask user to choose the temperature decay method
-        System.out.println("Choose the temperature decay method:");
-        System.out.println("1 - Geometric");
-        System.out.println("2 - Linear");
-        System.out.println("3 - Gradual");
-        System.out.println("4 - Logarithmic");
-        System.out.println("Option: ");
-        int optDecay = in.nextInt();
-
-        String methodDecay = switch (optDecay) {
-            case 1 -> "geometric";
-            case 2 -> "linear";
-            case 3 -> "gradual";
-            case 4 -> "logarithmic";
-            default -> "";
-        };
+        System.out.println("\nChoose the temperature decay method:");
+        System.out.println("geometric");
+        System.out.println("linear");
+        System.out.println("gradual");
+        System.out.println("logarithmic");
+        System.out.print("Option: ");
+        String optTemperatureDecay = in.next();
+        sa.setTemperatureDecayMethod(optTemperatureDecay);
 
         // Ask user to choose how to vary the number of iterations per temperature
         System.out.println("\nChoose the method for varying the number of iterations per temperature:");
-        System.out.println("1 - Linear");
-        System.out.println("2 - Exponential");
-        System.out.println("3 - Random");
-        System.out.println("4 - Constant");
-        System.out.println("Option: ");
-        int optIterPerTemp = in.nextInt();
+        System.out.println("linear");
+        System.out.println("exponential");
+        System.out.println("random");
+        System.out.println("constant");
+        System.out.print("Option: ");
+        String optIterPerTemp = in.next();
+        sa.setIterVariationMethod(optIterPerTemp);
 
-        String methodIter = switch (optIterPerTemp) {
-            case 1 -> "linear";
-            case 2 -> "exponential";
-            case 3 -> "random";
-            case 4 -> "constant";
-            default -> "";
-        };
-
-        // Create the Simulated Annealing object and configure methods
-        SimulatedAnnealing sa = new SimulatedAnnealing(m);
-        if (initialT0 > 0) {
-            sa.setInitialTemperature(initialT0);
-        }
-        sa.setDecayMethod(methodDecay);
-        sa.setIterMethod(methodIter);
-
-        // Run the algorithm, measure total execution time, and display results
-        long start = System.currentTimeMillis();
+        // Simulated Annealing execution
         sa.run();
-        long end = System.currentTimeMillis();
-
-        System.out.println("\nTotal Execution Time: " + (end - start) + " ms");
     }
 }

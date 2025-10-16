@@ -18,8 +18,11 @@ public class SimulatedAnnealing {
     private String decayMethod;
     private String iterMethod;
 
+    // Temperature Decay Constants
+    private final static double GRADUAL_BETA = 0.001;
+    private final static int LOGARITHMIC_CONSTANT = 275;
+
     // Stop criteria parameters
-    private final static int CONSTANT_DECAY = 275;
     private final static int NO_IMPROVEMENT_LIMIT = 5000;
     private final static double MIN_ACCEPTANCE_RATE = 0.01;
 
@@ -112,7 +115,7 @@ public class SimulatedAnnealing {
     }
 
     // Set temperature decay method
-    public void setDecayMethod(String decay) {
+    public void setTemperatureDecayMethod(String decay) {
         this.decayMethod = decay.toLowerCase();
     }
 
@@ -122,23 +125,21 @@ public class SimulatedAnnealing {
             case "geometric":
                 return T * this.alpha;
             case "linear":
-                double beta = (this.T0 - this.minTemp) / this.maxIter;
-                return Math.max(this.minTemp, T - beta);
+                return T - this.minTemp;
+            case "gradual":
+                // Gradual cooling formula: Tk = Tk-1 / (1 + beta * Tk-1)
+                return T / (1 + GRADUAL_BETA * T);
             case "logarithmic":
                 // As decay only happens after initial iterations per temperature,
                 // iteration will always be > 0, avoiding log(0)
-                return this.T0 - CONSTANT_DECAY * Math.log(iteration);
-            case "gradual":
-                double fraction = (double) iteration / this.maxIter;
-                double adaptiveAlpha = 1.0 - 0.5 * fraction;
-                return Math.max(this.minTemp, T * adaptiveAlpha);
+                return this.T0 - LOGARITHMIC_CONSTANT * Math.log(iteration);
             default:
                 return T * this.alpha; // Default: geometric decay
         }
     }
 
     // Set iteration variation method
-    public void setIterMethod(String iter) {
+    public void setIterVariationMethod(String iter) {
         this.iterMethod = iter.toLowerCase();
     }
 
@@ -210,7 +211,9 @@ public class SimulatedAnnealing {
         int totalMoves = 0;
         int noImprovementCount = 0;
 
+        // Variable to check if a stopping criteria occurred inside the loop
         boolean exit = false;
+
         long start = System.currentTimeMillis();
 
         System.out.println("\n==== Starting Simulated Annealing ====");
