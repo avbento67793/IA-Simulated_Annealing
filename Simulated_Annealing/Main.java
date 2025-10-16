@@ -21,13 +21,23 @@ public class Main {
 
         Scanner in = new Scanner(System.in);
 
+        // Ask user to choose weather he prefers to set the initial temperature or not
+        System.out.println("Do you want to set an initial temperature manually? (y/n): ");
+        String setT0 = in.next();
+
+        double initialT0 = -1;
+        if (setT0.equalsIgnoreCase("y")) {
+            System.out.println("Enter the initial temperature (T0): ");
+            initialT0 = in.nextDouble();
+        }
+
         // Ask user to choose the temperature decay method
         System.out.println("Choose the temperature decay method:");
         System.out.println("1 - Geometric");
         System.out.println("2 - Linear");
         System.out.println("3 - Gradual");
         System.out.println("4 - Logarithmic");
-        System.out.print("Option: ");
+        System.out.println("Option: ");
         int optDecay = in.nextInt();
 
         String methodDecay = switch (optDecay) {
@@ -44,7 +54,7 @@ public class Main {
         System.out.println("2 - Exponential");
         System.out.println("3 - Random");
         System.out.println("4 - Constant");
-        System.out.print("Option: ");
+        System.out.println("Option: ");
         int optIterPerTemp = in.nextInt();
 
         String methodIter = switch (optIterPerTemp) {
@@ -57,6 +67,9 @@ public class Main {
 
         // Create the Simulated Annealing object and configure methods
         SimulatedAnnealing sa = new SimulatedAnnealing(m);
+        if (initialT0 > 0) {
+            sa.setInitialTemperature(initialT0);
+        }
         sa.setDecayMethod(methodDecay);
         sa.setIterMethod(methodIter);
 

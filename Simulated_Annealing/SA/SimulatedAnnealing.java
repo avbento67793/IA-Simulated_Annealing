@@ -48,13 +48,21 @@ public class SimulatedAnnealing {
         return s;
     }
 
+    public void setInitialTemperature(double initialT0) {
+        this.T0 = initialT0;
+    }
+
     // Automatically adjust parameters based on the problem size
     private void autoAdjustParameters() {
         int n = this.cities.size();
 
         double avgDist = averageDistance();
-        this.T0 = Math.max(1.0, avgDist * 10.0);
-        this.minTemp = this.T0 / 1000.0;
+        if (this.T0 == 0.0) {
+            this.T0 = avgDist * 10.0;
+            this.minTemp = this.T0 / 1000.0;
+        } else {
+            this.minTemp = this.T0 / 1000.0;
+        }
 
         if (n <= 7) this.alpha = 0.8;
         else if (n <= 14) this.alpha = 0.9;
