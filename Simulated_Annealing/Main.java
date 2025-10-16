@@ -4,28 +4,30 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        DistanceMatrix m = new DistanceMatrix("distancias.txt"); // ficheiro com matriz
+        // Load the distance matrix file
+        DistanceMatrix m = new DistanceMatrix("distancias.txt");
 
-        // Exemplo E1
+        // Example E1
         ArrayList<String> E1 = new ArrayList<>(Arrays.asList("Atroeira", "Douro", "Pinhal", "Teixoso", "Ulgueira", "Vilar"));
         DistanceMatrix mE1 = new DistanceMatrix(m, E1);
 
-        // Exemplo E2
+        // Example E2
         ArrayList<String> E2 = new ArrayList<>(Arrays.asList("Cerdeira", "Douro", "Gonta", "Infantado", "Lourel", "Nelas", "Oura", "Quebrada", "Roseiral", "Serra", "Teixoso", "Ulgueira"));
         DistanceMatrix mE2 = new DistanceMatrix(m, E2);
 
-        // Exemplo E3
+        // Example E3
         ArrayList<String> E3 = new ArrayList<>(Arrays.asList("Belmar", "Cerdeira", "Douro", "Encosta", "Freita", "Gonta", "Horta", "Infantado", "Lourel", "Monte", "Nelas", "Oura", "Pinhal", "Quebrada", "Roseiral", "Serra", "Teixoso", "Ulgueira"));
         DistanceMatrix mE3 = new DistanceMatrix(m, E3);
 
         Scanner in = new Scanner(System.in);
 
-        System.out.println("Escolha o método de decaimento da temperatura:");
+        // Ask user to choose the temperature decay method
+        System.out.println("Choose the temperature decay method:");
         System.out.println("1 - Geometric");
         System.out.println("2 - Linear");
         System.out.println("3 - Gradual");
         System.out.println("4 - Logarithmic");
-        System.out.print("Opção: ");
+        System.out.print("Option: ");
         int optDecay = in.nextInt();
 
         String methodDecay = switch (optDecay) {
@@ -36,12 +38,13 @@ public class Main {
             default -> "";
         };
 
-        System.out.println("Escolha o método para variar o número de iterações por temperatura:");
-        System.out.println("1 - linear");
-        System.out.println("2 - exponential");
-        System.out.println("3 - random");
-        System.out.println("4 - constant");
-        System.out.print("Opção: ");
+        // Ask user to choose how to vary the number of iterations per temperature
+        System.out.println("\nChoose the method for varying the number of iterations per temperature:");
+        System.out.println("1 - Linear");
+        System.out.println("2 - Exponential");
+        System.out.println("3 - Random");
+        System.out.println("4 - Constant");
+        System.out.print("Option: ");
         int optIterPerTemp = in.nextInt();
 
         String methodIter = switch (optIterPerTemp) {
@@ -52,15 +55,16 @@ public class Main {
             default -> "";
         };
 
+        // Create the Simulated Annealing object and configure methods
         SimulatedAnnealing sa = new SimulatedAnnealing(m);
         sa.setDecayMethod(methodDecay);
         sa.setIterMethod(methodIter);
 
-        // Executar, medir tempo total e mostrar resultados
+        // Run the algorithm, measure total execution time, and display results
         long start = System.currentTimeMillis();
         sa.run();
         long end = System.currentTimeMillis();
-        System.out.println("Tempo total: " + (end - start) + " ms");
+
+        System.out.println("\nTotal Execution Time: " + (end - start) + " ms");
     }
 }
-

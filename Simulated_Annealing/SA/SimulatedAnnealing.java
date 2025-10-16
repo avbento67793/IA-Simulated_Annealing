@@ -9,7 +9,7 @@ public class SimulatedAnnealing {
     private final DistanceMatrix matrix;
     private final List<String> cities;
 
-    // Parâmetros a usar
+    // Parameters to use
     private double T0;
     private double alpha;
     private double minTemp;
@@ -18,12 +18,12 @@ public class SimulatedAnnealing {
     private String decayMethod;
     private String iterMethod;
 
-
-    // Parâmetros a usar para o critério de paragem
+    // Stop criteria parameters
+    private final static int CONSTANT_DECAY = 275;
     private final static int NO_IMPROVEMENT_LIMIT = 5000;
     private final static double MIN_ACCEPTANCE_RATE = 0.01;
 
-    // Random partilhado
+    // Shared random generator
     private final Random rng;
 
     public SimulatedAnnealing(DistanceMatrix matrix) {
@@ -39,7 +39,7 @@ public class SimulatedAnnealing {
         this.rng = new Random();
     }
 
-    // Gera solução inicial (permutação aleatória)
+    // Generate initial solution (random permutation)
     private Solution createInitialSolution() {
         ArrayList<String> sol = new ArrayList<>(this.cities);
         Collections.shuffle(sol, this.rng);
@@ -48,36 +48,28 @@ public class SimulatedAnnealing {
         return s;
     }
 
-    // Ajuste automático de parâmetros
+    // Automatically adjust parameters based on the problem size
     private void autoAdjustParameters() {
         int n = this.cities.size();
-        if (n < 2) { // proteção
-            this.T0 = 1.0;
-            this.alpha = 0.9;
-            this.minTemp = 1e-3;
-            this.iterPerTemp = 10;
-            this.maxIter = 100;
-            return;
-        }
 
         double avgDist = averageDistance();
         this.T0 = Math.max(1.0, avgDist * 10.0);
         this.minTemp = this.T0 / 1000.0;
 
-        if (n <= 8) this.alpha = 0.95;
-        else if (n <= 15) this.alpha = 0.98;
+        if (n <= 7) this.alpha = 0.8;
+        else if (n <= 14) this.alpha = 0.9;
         else this.alpha = 0.995;
 
         this.iterPerTemp = Math.max(100, n * 20);
         this.maxIter = Math.max(1000, n * 5000);
 
-        System.out.println("\n==== Parâmetros ajustados automaticamente ====");
-        System.out.printf("Cidades: %d | Dist. média: %.2f%n", n, avgDist);
+        System.out.println("\n==== Automatically Adjusted Parameters ====");
+        System.out.printf("Cities: %d | Avg. Distance: %.2f%n", n, avgDist);
         System.out.printf("T0 = %.2f | alpha = %.4f | minTemp = %.4f%n", this.T0, this.alpha, this.minTemp);
-        System.out.printf("Iterações/Temp = %d | Máx Iterações = %d%n", this.iterPerTemp, this.maxIter); // Apenas é usado este número de Iterações por Temperatura caso o tipo escolhido seja 'constant'
-    }                                                                                                    // Se outro tipo for escolhido serve de base para o cálculo do novo valor de Iterações por Temperatura
+        System.out.printf("Iterations/Temp = %d | Max Iterations = %d%n", this.iterPerTemp, this.maxIter);
+    }
 
-    // Calcula a média das distâncias
+    // Calculates the average distance between all cities
     private double averageDistance() {
         int n = this.cities.size();
         if (n < 2) return 0.0;
@@ -86,42 +78,37 @@ public class SimulatedAnnealing {
         for (int i = 0; i < n; i++) {
             for (int j = i + 1; j < n; j++) {
                 total += this.matrix.distance(this.cities.get(i), this.cities.get(j));
-                count++;
+                count++; // Count number of city pairs considered
             }
         }
         return total / Math.max(1, count);
     }
 
-    // Gera uma solução vizinha usando 2-opt
+    // Generates a neighbor solution using the 2-opt swap
     private Solution neighbor(Solution current) {
-        // Copia-se o caminho atual (lista de cidades) para não se alterar o original
+        // Copy current path to avoid modifying the original
         ArrayList<String> path = new ArrayList<>(current.getPath());
-
-        // Número de cidades no caminho
         int n = path.size();
 
-        // Escolhemos dois índices aleatórios com i < j
-        // Estes índices definem o segmento da rota que será invertido
-        int i = this.rng.nextInt(n - 1);              // i pode ser qualquer posição exceto a última
-        int j = i + 1 + this.rng.nextInt(n - i - 1);  // j é sempre maior que i, garantindo um intervalo válido
+        // Pick two random indices i < j
+        int i = this.rng.nextInt(n - 1);
+        int j = i + 1 + this.rng.nextInt(n - i - 1);
 
-        // Movimento 2-opt:
-        // Inverte o subcaminho entre as posições i e j (inclusive)
-        // Exemplo: [A, B, C, D, E, F] → se i = 1, j = 4 → [A, E, D, C, B, F]
+        // 2-opt move: reverse the segment between i and j (inclusive)
+        // Example: [A, B, C, D, E, F] → if i = 1, j = 4 → [A, E, D, C, B, F]
         Collections.reverse(path.subList(i, j + 1));
 
-
-        Solution newSol = new Solution(path);      // Cria uma solução com este novo caminho (vizinho)
-        newSol.evaluate(this.matrix);              // Calcula o custo total (distância percorrida na nova rota)
+        Solution newSol = new Solution(path);
+        newSol.evaluate(this.matrix);
         return newSol;
     }
 
-    // Define o decaimento de temperatura
+    // Set temperature decay method
     public void setDecayMethod(String decay) {
         this.decayMethod = decay.toLowerCase();
     }
 
-    // Calcula uma nova temperatura segundo o tipo de decaimento escolhido
+    // Compute new temperature based on selected decay type
     private double decayTemperature(double T, int iteration, String method) {
         switch (method.toLowerCase()) {
             case "geometric":
@@ -130,71 +117,73 @@ public class SimulatedAnnealing {
                 double beta = (this.T0 - this.minTemp) / this.maxIter;
                 return Math.max(this.minTemp, T - beta);
             case "logarithmic":
-                return this.T0 / Math.log(2 + iteration);
+                // As decay only happens after initial iterations per temperature,
+                // iteration will always be > 0, avoiding log(0)
+                return this.T0 - CONSTANT_DECAY * Math.log(iteration);
             case "gradual":
                 double fraction = (double) iteration / this.maxIter;
                 double adaptiveAlpha = 1.0 - 0.5 * fraction;
                 return Math.max(this.minTemp, T * adaptiveAlpha);
             default:
-                return T * this.alpha; // Decaimento geométrico por ser o mais comum
+                return T * this.alpha; // Default: geometric decay
         }
     }
 
-    // Define o tipo de iterações por temperatura
+    // Set iteration variation method
     public void setIterMethod(String iter) {
         this.iterMethod = iter.toLowerCase();
     }
 
-    // Calcula o número de iterações por temperatura com base na opção escolhida
+    // Compute number of iterations per temperature based on chosen method
     private int varyIterationsPerTemp(int baseIter, int iteration, String method) {
         switch (method.toLowerCase()) {
             case "linear":
-                // Aumenta progressivamente com o número de iterações
                 return baseIter + (iteration / 1000);
             case "exponential":
-                // Aumenta exponencialmente
                 return (int) (baseIter * Math.pow(1.5, iteration / 5000.0));
             case "random":
-                // Adiciona uma pequena flutuação aleatória
                 return baseIter + this.rng.nextInt(Math.max(1, baseIter / 5));
             case "constant":
                 return baseIter;
             default:
-                // Mantém constante
                 return baseIter;
         }
     }
 
-    // Verifica se algum critério de paragem foi ativado
+    // Check if any stop criterion has been met
     private boolean stopCriterionMethod(double T, int iteration, int acceptedMoves, int totalMoves, int noImprovementCount) {
-        double acceptance_rate = (double) acceptedMoves/totalMoves;
+        double acceptance_rate = (double) acceptedMoves / totalMoves;
         if (T <= this.minTemp) {
             System.out.println("\n===== STOP CRITERION =====");
-            System.out.printf("Temperatura Mínima Atingida: %-12.3f%n", T);
+            System.out.printf("Minimum Temperature Reached: %-12.3f%n", T);
             return true;
         } else if (iteration == this.maxIter) {
             System.out.println("\n===== STOP CRITERION =====");
-            System.out.println("Iteração máxima atingida: " + iteration);
+            System.out.println("Maximum Iteration Reached: " + iteration);
             return true;
-        }  else if (acceptance_rate < MIN_ACCEPTANCE_RATE) {
+        } else if (acceptance_rate < MIN_ACCEPTANCE_RATE) {
             System.out.println("\n===== STOP CRITERION =====");
-            System.out.println("AcceptedMoves: " + acceptedMoves);
-            System.out.println("TotalMoves: " + totalMoves);
-            System.out.printf("Acceptance rate: %-12.3f%n", acceptance_rate);
+            System.out.println("Accepted Moves: " + acceptedMoves);
+            System.out.println("Total Moves: " + totalMoves);
+            System.out.printf("Acceptance Rate: %-12.3f%n", acceptance_rate);
             return true;
         } else if (noImprovementCount > NO_IMPROVEMENT_LIMIT) {
             System.out.println("\n===== STOP CRITERION =====");
-            System.out.println("No improvement count: " + noImprovementCount);
+            System.out.println("No Improvement Count: " + noImprovementCount);
             return true;
         }
         return false;
     }
 
     public void run() {
-        // Configuração automática dos parâmetros do SA
+        // Auto configuration
+        if (this.cities.size() < 2) {
+            System.out.println("There must be at least 2 cities.");
+            return;
+        }
         autoAdjustParameters();
 
-        // Inicialização de soluções
+        // Initialize solutions
         Solution current = createInitialSolution();
         current.evaluate(this.matrix);
         Solution best = current;
@@ -202,7 +191,7 @@ public class SimulatedAnnealing {
         Solution first = current;
         Solution last = current;
 
-        // Variáveis locais para guardar a informação sobre cada tipo de solução
+        // Variables to track each type of solution
         double firstTemp = this.T0, lastTemp = 0.0, bestTemp = 0.0, worstTemp = 0.0;
         int firstIter = 0, lastIter = 0, bestIter = 0, worstIter = 0;
 
@@ -213,39 +202,36 @@ public class SimulatedAnnealing {
         int totalMoves = 0;
         int noImprovementCount = 0;
 
-        // Variável para verifica se ocorreu um critério de paragem dentro do 'for' loop
         boolean exit = false;
-
         long start = System.currentTimeMillis();
 
-        System.out.println("\n==== Início da execução do Simulated Annealing ====");
-        System.out.printf("Método de decaimento da temperatura: %s%n", this.decayMethod);
-        System.out.printf("Método de variação de iterações por temperatura: %s%n", this.iterMethod);
+        System.out.println("\n==== Starting Simulated Annealing ====");
+        System.out.printf("Temperature Decay Method: %s%n", this.decayMethod);
+        System.out.printf("Iteration Variation Method: %s%n", this.iterMethod);
         System.out.println("------------------------------------------------------------\n");
+        System.out.println("Initial Iterations per Temperature: " + this.iterPerTemp);
 
-        System.out.println("Número de iterações por temperatura inicial: " + this.iterPerTemp);
-
-        // Loop principal — enquanto não atingir critério de paragem
+        // Main loop
         while (!stopCriterionMethod(T, iteration, acceptedMoves, totalMoves, noImprovementCount)) {
 
             for (int k = 0; k < this.iterPerTemp; k++) {
                 if (stopCriterionMethod(T, iteration, acceptedMoves, totalMoves, noImprovementCount)) {
-                    exit = true; // Caso tenha ocorrido um critério de paragem durante a execução do 'for' loop saímos
+                    exit = true;
                     break;
                 }
                 Solution next = neighbor(current);
                 int delta = next.getCost() - current.getCost();
                 totalMoves++;
 
-                // Critério de aceitação
-                if (delta < 0 || this.rng.nextDouble() < Math.exp(-delta / T)) { // this.rng.nextDouble retorna um número aleatório entre 0.0 e 1.0 inclusive
+                // Acceptance criterion
+                if (delta < 0 || this.rng.nextDouble() < Math.exp(-delta / T)) {
                     current = next;
                     acceptedMoves++;
                 } else {
                     noImprovementCount++;
                 }
 
-                // Atualizar melhor/pior solução
+                // Update best/worst
                 if (current.getCost() < best.getCost()) {
                     best = current;
                     bestTemp = T;
@@ -260,42 +246,38 @@ public class SimulatedAnnealing {
                 iteration++;
             }
 
-            // Guardar última solução
+            // Update last solution
             last = current;
             lastTemp = T;
             lastIter = iteration;
 
-            // Verifica se ocorreu um critério de paragem dentro do 'for' loop
-            // Caso seja true saímos do loop principal.
-            if (exit) {
-                break;
-            }
+            if (exit) break;
 
-            // Varia o número de iterações por temperatura, consoante o tipo escolhido
+            // Update number of iterations per temperature
             this.iterPerTemp = varyIterationsPerTemp(this.iterPerTemp, iteration, this.iterMethod);
-            System.out.println("Número de iterações por temperatura atual: " + this.iterPerTemp);
+            System.out.println("Current Iterations per Temperature: " + this.iterPerTemp);
 
-            // Atualiza temperatura conforme o tipo de decaimento escolhido
+            // Update temperature
             T = decayTemperature(T, iteration, this.decayMethod);
         }
 
         long end = System.currentTimeMillis();
 
-        // Apresentação dos resultados
-        System.out.println("\n===== RESULTADOS =====");
+        // Display results
+        System.out.println("\n===== RESULTS =====");
         System.out.printf("%-18s %-55s %-12s %-12s %-12s%n",
-                "Tipo de Solução:", "Caminho (Percurso)", "Custo (Km)", "Iteração", "Temperatura");
+                "Solution Type:", "Path", "Cost (Km)", "Iteration", "Temperature");
         System.out.println("----------------------------------------------------------------------------------------------------------------");
         System.out.printf("%-18s %-55s %-10d %-12d %-12.2f%n",
-                "Primeira solução:", first.getPath(), first.getCost(), firstIter, firstTemp);
+                "First Solution:", first.getPath(), first.getCost(), firstIter, firstTemp);
         System.out.printf("%-18s %-55s %-10d %-12d %-12.2f%n",
-                "Última solução:", last.getPath(), last.getCost(), lastIter, lastTemp);
+                "Last Solution:", last.getPath(), last.getCost(), lastIter, lastTemp);
         System.out.printf("%-18s %-55s %-10d %-12d %-12.2f%n",
-                "Melhor solução:", best.getPath(), best.getCost(), bestIter, bestTemp);
+                "Best Solution:", best.getPath(), best.getCost(), bestIter, bestTemp);
         System.out.printf("%-18s %-55s %-10d %-12d %-12.2f%n",
-                "Pior solução:", worst.getPath(), worst.getCost(), worstIter, worstTemp);
+                "Worst Solution:", worst.getPath(), worst.getCost(), worstIter, worstTemp);
 
-        System.out.println("\nIterações totais: " + iteration);
-        System.out.println("Tempo execução: " + (end - start) + " ms");
+        System.out.println("\nTotal Iterations: " + iteration);
+        System.out.println("Execution Time: " + (end - start) + " ms");
     }
 }

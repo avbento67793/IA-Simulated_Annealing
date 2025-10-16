@@ -9,26 +9,26 @@ public class Solution {
 
     public Solution(ArrayList<String> path) {
         this.path = new ArrayList<>(path);
-        this.cost = Integer.MAX_VALUE; // inicial
+        this.cost = Integer.MAX_VALUE; // initial cost (very high value)
     }
 
-    // Calcula o custo total da solução
+    // Calculates the total cost of the solution
     public void evaluate(DistanceMatrix m) {
         int total = 0;
         for (int i = 0; i < path.size() - 1; i++) {
             total += m.distance(path.get(i), path.get(i + 1));
         }
-        // fechar ciclo TSP
+        // Close the cycle (for the TSP: return to the starting city)
         total += m.distance(path.get(path.size() - 1), path.get(0));
         this.cost = total;
     }
 
-    // Retorna o custo da solução
+    // Returns the total cost of the solution
     public int getCost() {
         return cost;
     }
 
-    // Retorna o path da solução
+    // Returns the path (sequence of cities)
     public ArrayList<String> getPath() {
         return path;
     }
